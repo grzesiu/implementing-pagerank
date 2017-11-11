@@ -1,87 +1,57 @@
-#!/usr/bin/python
-
-import sys
-import time
+from collections import defaultdict
 
 
-class Edge:
-    def __init__(self, origin=None):
-        self.origin = ...  # write appropriate value
-        self.weight = ...  # write appropriate value
+class PR:
+    def __init__(self, airports, routes):
+        self.airports = airports
+        self.routes = routes
 
-    def __repr__(self):
-        return "edge: {0} {1}".format(self.origin, self.weight)
+    def compute_page_ranks(self):
+        pass
 
-        ## write rest of code that you need for this class
+    def __str__(self):
+        return str(self.airports) + '\n' + str(self.routes)
 
+    @classmethod
+    def from_str(cls, airports_as_str, routes_as_str):
+        airports = cls.read_airports(airports_as_str)
+        routes = cls.read_routes(routes_as_str)
+        return cls(airports, routes)
 
-class Airport:
-    def __init__(self, iden=None, name=None):
-        self.code = iden
-        self.name = name
-        self.routes = []
-        self.routeHash = dict()
-        self.outweight =  # write appropriate value
+    @staticmethod
+    def read_airports(airports_as_str):
+        airports = {}
 
-    def __repr__(self):
-        return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
-
-
-edgeList = []  # list of Edge
-edgeHash = dict()  # hash of edge to ease the match
-airportList = []  # list of Airport
-airportHash = dict()  # hash key IATA code -> Airport
-
-
-def readAirports(fd):
-    print("Reading Airport file from {0}".format(fd))
-    airportsTxt = open(fd, "r")
-    cont = 0
-    for line in airportsTxt.readlines():
-        a = Airport()
-        try:
+        for line in airports_as_str:
             temp = line.split(',')
-            if len(temp[4]) != 5:
-                raise Exception('not an IATA code')
-            a.name = temp[1][1:-1] + ", " + temp[3][1:-1]
-            a.code = temp[4][1:-1]
-        except Exception as inst:
-            pass
-        else:
-            cont += 1
-            airportList.append(a)
-            airportHash[a.code] = a
-    airportsTxt.close()
-    print("There were {0} Airports with IATA code".format(cont))
+            name = temp[2][1:-1]
+            iata = temp[4][1:-1]
+            airports[iata] = name
+
+        return airports
+
+    @staticmethod
+    def read_routes(routes_as_str):
+        routes = defaultdict(lambda: defaultdict(int))
+
+        for line in routes_as_str:
+            temp = line.split(',')
+            origin = temp[2]
+            destination = temp[4]
+            routes[origin][destination] += 1
+
+        return routes
 
 
-def readRoutes(fd):
-    print("Reading Routes file from {0}".format(fd))
-    # write your code
+def main():
+    with open("airports.txt", "r") as f:
+        airports_as_str = f.readlines()
+    with open("routes.txt", "r") as f:
+        routes_as_str = f.readlines()
 
-
-def computePageRanks():
-    pass
-
-
-# write your code
-
-def outputPageRanks():
-    pass
-
-
-# write your code
-
-def main(argv=None):
-    readAirports("airports.txt")
-    readRoutes("routes.txt")
-    time1 = time.time()
-    iterations = computePageRanks()
-    time2 = time.time()
-    outputPageRanks()
-    print("#Iterations:", iterations)
-    print("Time of computePageRanks():", time2 - time1)
+    pr = PR.from_str(airports_as_str, routes_as_str)
+    print(pr)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
