@@ -26,7 +26,8 @@ class PR:
             temp = line.split(',')
             name = temp[2][1:-1]
             iata = temp[4][1:-1]
-            airports[iata] = name
+            if iata:
+                airports[iata] = name
 
         return airports
 
