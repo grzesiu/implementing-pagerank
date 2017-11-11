@@ -8,7 +8,26 @@ class PR:
         self.df = df
 
     def compute_page_ranks(self):
-        pass
+        q = {i: 1 / len(self.airports) for i in self.airports}
+
+        while True:
+            print("dupa")
+            p = dict(q)
+            for destination in self.routes:
+                q[destination] = \
+                    self.df \
+                    * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
+                    + (1 - self.df) / len(self.airports)
+
+            if self.stop(p, q, 1e-10):
+                return q
+
+    @staticmethod
+    def stop(p, q, precision):
+        for k in p.keys():
+            if q[k] + precision > p[k] > q[k] - precision:
+                return True
+        return False
 
     def __str__(self):
         return str(self.routes)[:1000] + '\n' + str(self.airports)
@@ -51,13 +70,13 @@ class PR:
 
 
 def main():
-    with open("airports.txt", "r") as f:
+    with open("test_airports.txt", "r") as f:
         airports_as_str = f.readlines()
     with open("test_routes.txt", "r") as f:
         routes_as_str = f.readlines()
 
     pr = PR.from_str(airports_as_str, routes_as_str)
-    print(pr)
+    print(pr.compute_page_ranks())
 
 
 if __name__ == "__main__":

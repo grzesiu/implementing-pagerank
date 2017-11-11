@@ -1,0 +1,4 @@
+15,"Isafjordur","Isafjordur","Iceland","1","BIIS",66.058056,-23.135278,8,0,"N"
+16,"Keflavik International Airport","Keflavik","Iceland","2","BIKF",63.985,-22.605556,171,0,"N"
+17,"Patreksfjordur","Patreksfjordur","Iceland","3","BIPA",65.555833,-23.965,11,0,"N"
+18,"Reykjavik","Reykjavik","Iceland","4","BIRK",64.13,-21.940556,48,0,"N"
