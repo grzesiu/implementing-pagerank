@@ -13,30 +13,29 @@ class PR:
 
         while True:
             p = dict(q)
-            for destination in self.routes:
+            for destination in self.airports:
                 q[destination] = \
                     self.df \
                     * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
                     + (1 - self.df) / len(self.airports)
 
-            if PR.stop(p, q, 1e-5):
+            if self.stop(p, q):
                 return PR.norm(q)
 
-    @staticmethod
-    def stop(p, q, precision):
+    def stop(self, p, q):
         for k in p.keys():
-            if q[k] + precision > p[k] > q[k] - precision:
+            if q[k] + self.precision > p[k] > q[k] - self.precision:
                 return True
         return False
-
-    @staticmethod
-    def norm(p):
-        return {k: v / sum(p.values()) for k, v in p.items()}
 
     @classmethod
     def create(cls, airports_as_str, routes_as_str, df, precision):
         airports = cls.read_airports(airports_as_str)
         routes = cls.read_routes(routes_as_str)
+
+        airports = PR.add_missing(routes, airports, "NO_NAME")
+        routes = PR.add_missing(airports, routes, defaultdict(float))
+
         return cls(airports, routes, df, precision)
 
     @staticmethod
@@ -69,15 +68,26 @@ class PR:
 
         return routes
 
+    @staticmethod
+    def add_missing(from_dict, to_dict, default):
+        missing = {k: default for k in set(from_dict) - set(to_dict)}
+        return {**to_dict, **missing}
+
+    @staticmethod
+    def norm(p):
+        return {k: v / sum(p.values()) for k, v in p.items()}
+
 
 def main():
-    with open("test_airports.txt", "r") as f:
+    with open("airports.txt", "r") as f:
         airports_as_str = f.readlines()
-    with open("test_routes.txt", "r") as f:
+    with open("routes.txt", "r") as f:
         routes_as_str = f.readlines()
 
     pr = PR.create(airports_as_str, routes_as_str, 2 / 3, 1e-5)
+
     print(pr.compute_page_ranks())
+    print(sum(pr.compute_page_ranks().values()))
 
 
 if __name__ == "__main__":
