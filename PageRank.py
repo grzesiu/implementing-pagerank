@@ -2,16 +2,16 @@ from collections import defaultdict
 
 
 class PR:
-    def __init__(self, airports, routes, df=0.9):
+    def __init__(self, airports, routes, df, precision):
         self.airports = airports
         self.routes = routes
         self.df = df
+        self.precision = precision
 
     def compute_page_ranks(self):
         q = {i: 1 / len(self.airports) for i in self.airports}
 
         while True:
-            print("dupa")
             p = dict(q)
             for destination in self.routes:
                 q[destination] = \
@@ -19,8 +19,8 @@ class PR:
                     * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
                     + (1 - self.df) / len(self.airports)
 
-            if self.stop(p, q, 1e-10):
-                return q
+            if PR.stop(p, q, 1e-5):
+                return PR.norm(q)
 
     @staticmethod
     def stop(p, q, precision):
@@ -29,14 +29,15 @@ class PR:
                 return True
         return False
 
-    def __str__(self):
-        return str(self.routes)[:1000] + '\n' + str(self.airports)
+    @staticmethod
+    def norm(p):
+        return {k: v / sum(p.values()) for k, v in p.items()}
 
     @classmethod
-    def from_str(cls, airports_as_str, routes_as_str):
+    def create(cls, airports_as_str, routes_as_str, df, precision):
         airports = cls.read_airports(airports_as_str)
         routes = cls.read_routes(routes_as_str)
-        return cls(airports, routes)
+        return cls(airports, routes, df, precision)
 
     @staticmethod
     def read_airports(airports_as_str):
@@ -75,7 +76,7 @@ def main():
     with open("test_routes.txt", "r") as f:
         routes_as_str = f.readlines()
 
-    pr = PR.from_str(airports_as_str, routes_as_str)
+    pr = PR.create(airports_as_str, routes_as_str, 2 / 3, 1e-5)
     print(pr.compute_page_ranks())
 
 
