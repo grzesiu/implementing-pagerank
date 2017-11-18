@@ -1,3 +1,4 @@
+import argparse
 import time
 from collections import defaultdict
 
@@ -10,10 +11,8 @@ class PR:
         self.precision = precision
 
     def compute_page_ranks(self):
-        # at first q is dict of airport codes as keys and 1/n as values
         q = {i: 1 / len(self.airports) for i in self.airports}
 
-        # iteration counter
         k = 0
         while True:
             k += 1
@@ -23,9 +22,9 @@ class PR:
                     self.df \
                     * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
                     + (1 - self.df) / len(self.airports)
-
+            q = PR.norm(q)
             if self.stop(p, q):
-                return PR.norm(q), k
+                return q, k
 
     def stop(self, p, q):
         for k in p.keys():
@@ -62,6 +61,7 @@ class PR:
             origin = temp[2]
             destination = temp[4]
 
+            # we are adding only routes between airports that are present in the database
             if origin in airports and destination in airports:
                 routes[destination][origin] += 1
                 out_degs[origin] += 1
@@ -78,12 +78,20 @@ class PR:
 
 
 def main():
-    with open("airports.txt", "r", encoding="utf8") as f:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--airports', default='airports.txt', help='Airports file')
+    parser.add_argument('--routes', default='routes.txt', help='Routes file')
+    parser.add_argument('--precision', default=1e-12, type=float, help='Precision that the results have to converge to')
+    parser.add_argument('--df', default=0.8, type=float, help='Dumping factor')
+
+    args = parser.parse_args()
+
+    with open(args.airports, "r", encoding="utf8") as f:
         airports_as_str = f.readlines()
-    with open("routes.txt", "r", encoding="utf8") as f:
+    with open(args.routes, "r", encoding="utf8") as f:
         routes_as_str = f.readlines()
 
-    pr = PR.create(airports_as_str, routes_as_str, 0.8, 1e-20)
+    pr = PR.create(airports_as_str, routes_as_str, args.df, args.precision)
 
     start_time = time.time()
 
@@ -94,6 +102,7 @@ def main():
     print("Number of iterations:", k)
     print("Time of calculating PageRanks:", end_time - start_time)
     print(result)
+    print(sum(result.values()))
 
 
 if __name__ == "__main__":
