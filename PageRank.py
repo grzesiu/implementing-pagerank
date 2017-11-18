@@ -81,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--airports', default='airports.txt', help='Airports file')
     parser.add_argument('--routes', default='routes.txt', help='Routes file')
+    parser.add_argument('--output', default='out.csv', help='Output file')
     parser.add_argument('--precision', default=1e-12, type=float, help='Precision that the results have to converge to')
     parser.add_argument('--df', default=0.8, type=float, help='Dumping factor')
 
@@ -101,8 +102,10 @@ def main():
 
     print("Number of iterations:", k)
     print("Time of calculating PageRanks:", end_time - start_time)
-    print(result)
-    print(sum(result.values()))
+
+    with open(args.output, 'w') as f:
+        for k in result.keys():
+            f.write('{},{},{}\n'.format(k, pr.airports[k], result[k]))
 
 
 if __name__ == "__main__":
