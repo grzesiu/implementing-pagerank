@@ -87,11 +87,14 @@ def main():
 
     args = parser.parse_args()
 
+    print("Reading airports from:", args.airports)
     with open(args.airports, "r", encoding="utf8") as f:
         airports_as_str = f.readlines()
+    print("Reading routes from:", args.routes)
     with open(args.routes, "r", encoding="utf8") as f:
         routes_as_str = f.readlines()
 
+    print("Calculating PageRank with df={} and precision={}".format(args.df, args.precision))
     pr = PR.create(airports_as_str, routes_as_str, args.df, args.precision)
 
     start_time = time.time()
@@ -103,6 +106,7 @@ def main():
     print("Number of iterations:", k)
     print("Time of calculating PageRanks:", end_time - start_time)
 
+    print("Saving results to:", args.output)
     with open(args.output, 'w') as f:
         for k in result.keys():
             f.write('{},{},{}\n'.format(k, pr.airports[k], result[k]))
