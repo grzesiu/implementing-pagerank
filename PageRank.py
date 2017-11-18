@@ -4,25 +4,32 @@ from collections import defaultdict
 
 
 class PR:
-    def __init__(self, airports, routes, df, precision):
+    def __init__(self, airports, routes, sinks, df, precision):
         self.airports = airports
         self.routes = routes
+        self.sinks = sinks
         self.df = df
         self.precision = precision
 
     def compute_page_ranks(self):
         q = {i: 1 / len(self.airports) for i in self.airports}
-
         k = 0
+        n = len(self.airports)
         while True:
             k += 1
             p = dict(q)
+
+            p_sinks = sum(p[sink] for sink in self.sinks) / n
+
             for destination in self.airports:
                 q[destination] = \
                     self.df \
-                    * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
-                    + (1 - self.df) / len(self.airports)
-            q = PR.norm(q)
+                    * (p_sinks + sum([weight * p[origin] for origin, weight in self.routes[destination].items()])) \
+                    + (1 - self.df) / n
+
+            # sum of probabilities is equal to 1 in all iterations
+            # print(sum(q.values()))
+
             if self.stop(p, q):
                 return q, k
 
@@ -35,9 +42,9 @@ class PR:
     @classmethod
     def create(cls, airports_as_str, routes_as_str, df, precision):
         airports = cls.read_airports(airports_as_str)
-        routes = cls.read_routes(routes_as_str, airports)
+        routes, sinks = cls.read_routes(routes_as_str, airports)
 
-        return cls(airports, routes, df, precision)
+        return cls(airports, routes, sinks, df, precision)
 
     @staticmethod
     def read_airports(airports_as_str):
@@ -61,7 +68,7 @@ class PR:
             origin = temp[2]
             destination = temp[4]
 
-            # we are adding only routes between airports that are present in the database
+            # we are adding only routes between airports that are present in the airports database
             if origin in airports and destination in airports:
                 routes[destination][origin] += 1
                 out_degs[origin] += 1
@@ -70,11 +77,8 @@ class PR:
             for origin in routes[destination]:
                 routes[destination][origin] /= out_degs[origin]
 
-        return routes
-
-    @staticmethod
-    def norm(p):
-        return {k: v / sum(p.values()) for k, v in p.items()}
+        sinks = set(airports.keys()) - set(out_degs.keys())
+        return routes, sinks
 
 
 def main():
@@ -87,14 +91,11 @@ def main():
 
     args = parser.parse_args()
 
-    print("Reading airports from:", args.airports)
     with open(args.airports, "r", encoding="utf8") as f:
         airports_as_str = f.readlines()
-    print("Reading routes from:", args.routes)
     with open(args.routes, "r", encoding="utf8") as f:
         routes_as_str = f.readlines()
 
-    print("Calculating PageRank with df={} and precision={}".format(args.df, args.precision))
     pr = PR.create(airports_as_str, routes_as_str, args.df, args.precision)
 
     start_time = time.time()
@@ -103,10 +104,12 @@ def main():
 
     end_time = time.time()
 
+    print("Number of vertices:", len(pr.airports))
+    print("Number of vertices with no outgoing edges:", len(pr.sinks))
+    print("Number of edges:", sum(len(v) for v in pr.routes.values()))
     print("Number of iterations:", k)
     print("Time of calculating PageRanks:", end_time - start_time)
-
-    print("Saving results to:", args.output)
+    print("Results saved to:", args.output)
     with open(args.output, 'w') as f:
         for k in result.keys():
             f.write('{},{},{}\n'.format(k, pr.airports[k], result[k]))
