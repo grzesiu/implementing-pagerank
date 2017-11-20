@@ -1,7 +1,7 @@
 import argparse
 import time
 from collections import defaultdict
-
+import operator
 
 class PR:
     def __init__(self, airports, routes, sinks, df, precision):
@@ -110,9 +110,13 @@ def main():
     print("Number of iterations:", k)
     print("Time of calculating PageRanks:", end_time - start_time)
     print("Results saved to:", args.output)
-    with open(args.output, 'w') as f:
-        for k in result.keys():
-            f.write('{},{},{}\n'.format(k, pr.airports[k], result[k]))
+
+    sorted_result = list(reversed(sorted(result.items(), key=operator.itemgetter(1))))
+    print(sorted_result)
+    with open(args.output, 'w', encoding="utf8") as f:
+        for e in sorted_result:
+            f.write('{},{},{}\n'.format(str(e[0]), pr.airports[str(e[0])], str(e[1])))
+
 
 
 if __name__ == "__main__":
