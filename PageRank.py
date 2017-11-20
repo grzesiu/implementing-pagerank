@@ -3,6 +3,7 @@ import time
 from collections import defaultdict
 import operator
 
+
 class PR:
     def __init__(self, airports, routes, sinks, df, precision):
         self.airports = airports
@@ -23,7 +24,9 @@ class PR:
             p_sinks = sum(p[sink] for sink in self.sinks) / n
 
             for destination in self.airports:
-                q[destination] = self.df * (p_sinks + sum([weight * p[origin] for origin, weight in self.routes[destination].items()])) + (1 - self.df) / n
+                q[destination] = self.df * (
+                    p_sinks + sum([weight * p[origin] for origin, weight in self.routes[destination].items()])) + \
+                                 (1 - self.df) / n
 
             # sum of probabilities is equal to 1 in all iterations
             # print(sum(q.values()))
@@ -73,7 +76,6 @@ class PR:
 
         for destination in routes:
             for origin in routes[destination]:
-                s = out_degs[origin]
                 routes[destination][origin] /= out_degs[origin]
         sinks = set(airports.keys()) - set(out_degs.keys())
         return routes, sinks
@@ -84,8 +86,8 @@ def main():
     parser.add_argument('--airports', default='airports.txt', help='Airports file')
     parser.add_argument('--routes', default='routes.txt', help='Routes file')
     parser.add_argument('--output', default='out.csv', help='Output file')
-    parser.add_argument('--precision', default=1e-12, type=float, help='Precision that the results have to converge to')
-    parser.add_argument('--df', default=0.8, type=float, help='Dumping factor')
+    parser.add_argument('--precision', default=1e-15, type=float, help='Precision that the results have to converge to')
+    parser.add_argument('--df', default=0.9, type=float, help='Dumping factor')
 
     args = parser.parse_args()
 
@@ -112,8 +114,7 @@ def main():
     sorted_result = list(reversed(sorted(result.items(), key=operator.itemgetter(1))))
     with open(args.output, 'w', encoding="utf8") as f:
         for code, rank in sorted_result:
-            f.write('{},{},{}\n'.format(str(code), pr.airports[str(code)], str(rank)))
-
+            f.write('{},{}\n'.format(str(rank), pr.airports[str(code)]))
 
 
 if __name__ == "__main__":
