@@ -12,20 +12,18 @@ class PR:
         self.precision = precision
 
     def compute_page_ranks(self):
+        # at first, all the probabilities are equal since random surfer might start from any airport
         q = {i: 1 / len(self.airports) for i in self.airports}
         k = 0
         n = len(self.airports)
         while True:
             k += 1
             p = dict(q)
-
+            # global probability of choosing a sink as destination for the random surfer
             p_sinks = sum(p[sink] for sink in self.sinks) / n
 
             for destination in self.airports:
-                q[destination] = \
-                    self.df \
-                    * (p_sinks + sum([weight * p[origin] for origin, weight in self.routes[destination].items()])) \
-                    + (1 - self.df) / n
+                q[destination] = self.df * (p_sinks + sum([weight * p[origin] for origin, weight in self.routes[destination].items()])) + (1 - self.df) / n
 
             # sum of probabilities is equal to 1 in all iterations
             # print(sum(q.values()))
@@ -75,8 +73,8 @@ class PR:
 
         for destination in routes:
             for origin in routes[destination]:
+                s = out_degs[origin]
                 routes[destination][origin] /= out_degs[origin]
-
         sinks = set(airports.keys()) - set(out_degs.keys())
         return routes, sinks
 
@@ -112,10 +110,9 @@ def main():
     print("Results saved to:", args.output)
 
     sorted_result = list(reversed(sorted(result.items(), key=operator.itemgetter(1))))
-    print(sorted_result)
     with open(args.output, 'w', encoding="utf8") as f:
-        for e in sorted_result:
-            f.write('{},{},{}\n'.format(str(e[0]), pr.airports[str(e[0])], str(e[1])))
+        for code, rank in sorted_result:
+            f.write('{},{},{}\n'.format(str(code), pr.airports[str(code)], str(rank)))
 
 
 
