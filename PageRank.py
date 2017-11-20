@@ -15,10 +15,11 @@ class PR:
         q = {i: 1 / len(self.airports) for i in self.airports}
 
         # iteration counter
-        k = 0
+        iter_count = 0
         while True:
             # p is a copy of q so that changing p wouldn't change q
             p = dict(q)
+            iter_count += 1
             for destination in self.airports:
                 # apply pageRank
                 q[destination] = \
@@ -26,13 +27,16 @@ class PR:
                     * sum([weight * p[origin] for origin, weight in self.routes[destination].items()]) \
                     + (1 - self.df) / len(self.airports)
 
+            print(str(iter_count))
             # check if iteration values already too similar
             if self.stop(p, q):
+
                 return PR.norm(q)
 
-            k += 1
+
 
     def stop(self, p, q):
+        #print(q[p.keys()[0]] + self.precision - p[0])
         for k in p.keys():
             if q[k] + self.precision > p[k] and p[k] > q[k] - self.precision:
                 return True
@@ -94,11 +98,12 @@ def main():
     with open("routes.txt", "r", encoding="utf8") as f:
         routes_as_str = f.readlines()
 
-    pr = PR.create(airports_as_str, routes_as_str, 2/3, 1e-5)
+
+    pr = PR.create(airports_as_str, routes_as_str, 1/3, 1e-10)
     # measuring pageRank elapsed time
     start_time = time.time()
-    try_count = 10
-    for i in range(10):
+    try_count = 40
+    for i in range(try_count):
         ranks = (pr.compute_page_ranks())
     print("Elapsed time: " + str((time.time() - start_time)/try_count))
     # if sum of probabilities equals to one then the pageRank vector is done right
